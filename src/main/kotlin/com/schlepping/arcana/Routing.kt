@@ -1,4 +1,4 @@
-package com.schlepping
+package com.schlepping.arcana
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*

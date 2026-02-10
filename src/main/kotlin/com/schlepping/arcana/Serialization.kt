@@ -1,4 +1,4 @@
-package com.schlepping
+package com.schlepping.arcana
 
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
