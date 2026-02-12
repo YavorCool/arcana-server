@@ -1,6 +1,5 @@
 package com.schlepping
 
-import com.schlepping.arcana.module
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
@@ -11,8 +10,8 @@ class ApplicationTest {
 
     @Test
     fun testRoot() = testApplication {
-        application {
-            module()
+        environment {
+            config = io.ktor.server.config.ApplicationConfig("application.yaml")
         }
         client.get("/").apply {
             assertEquals(HttpStatusCode.OK, status)

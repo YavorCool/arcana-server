@@ -1,0 +1,12 @@
+ktor:
+  application:
+    modules:
+      - com.schlepping.arcana.ApplicationKt.module
+  deployment:
+    port: 8080
+
+jwt:
+  domain: "https://test-domain/"
+  audience: "test-audience"
+  realm: "test-realm"
+  secret: "test-secret"
