@@ -8,6 +8,56 @@ servers:
     description: "Local dev"
   - url: "http://194.59.40.207:8080"
     description: "VPS"
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [deviceId, platform]
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        platform:
+          type: string
+          enum: [android, ios]
+          example: "android"
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          example: "e3e0ab92-e4d5-4597-81ee-e0b707be02f5"
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIs..."
+        refreshToken:
+          type: string
+          example: "e3e0ab92-e4d5-4597-81ee-e0b707be02f5"
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid refresh token"
+        code:
+          type: string
+          example: "BAD_REQUEST"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
 paths:
   /health:
     get:
@@ -26,3 +76,55 @@ paths:
                   status:
                     type: "string"
                     example: "ok"
+
+  /api/v1/auth/register:
+    post:
+      tags:
+        - "Auth"
+      summary: "Register device"
+      description: "Register a new device or re-authenticate an existing one. Returns access + refresh token pair."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: "Device registered, tokens issued"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
+          description: "Invalid request (bad UUID, missing fields)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - "Auth"
+      summary: "Refresh tokens"
+      description: "Exchange a valid refresh token for a new access + refresh token pair. Old refresh token is invalidated (rotation)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: "New token pair issued"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
+          description: "Invalid or expired refresh token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
