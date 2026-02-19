@@ -10,3 +10,8 @@ jwt:
     audience: "jwt-audience"
     realm: "ktor sample app"
     secret: "secret"
+
+database:
+  url: "jdbc:postgresql://localhost:5435/arcana"
+  user: "arcana"
+  password: "arcana_dev"

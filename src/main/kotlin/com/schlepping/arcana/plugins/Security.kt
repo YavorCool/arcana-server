@@ -1,4 +1,4 @@
-package com.schlepping.arcana
+package com.schlepping.arcana.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

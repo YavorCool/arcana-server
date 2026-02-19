@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.swagger)
+    implementation(libs.exposed.java.time)
 
     implementation(libs.logback.classic)
 
