@@ -16,11 +16,22 @@ Kotlin + Ktor бэкенд для ARCANA.
 
 ```
 src/main/kotlin/com/schlepping/arcana/
-├── Application.kt    — main + module(), точка входа
-├── Routing.kt        — configureRouting()
-├── Security.kt       — configureSecurity(), JWT
-├── Serialization.kt  — configureSerialization()
-└── Monitoring.kt     — configureMonitoring()
+├── Application.kt        — main + module(), точка входа
+├── Routing.kt            — configureRouting(), сборка всех роутов
+├── plugins/
+│   ├── Database.kt       — configureDatabase(), подключение к PostgreSQL
+│   ├── Security.kt       — configureSecurity(), JWT
+│   ├── Serialization.kt  — configureSerialization()
+│   └── Monitoring.kt     — configureMonitoring()
+├── db/                   — определения таблиц Exposed
+│   ├── DeviceTables.kt
+│   ├── ReadingTables.kt
+│   └── UsageTables.kt
+└── auth/                 — feature: аутентификация
+    ├── AuthModels.kt     — DTO + доменные модели
+    ├── AuthRepository.kt — работа с БД
+    ├── AuthService.kt    — бизнес-логика, JWT генерация
+    └── AuthRoutes.kt     — эндпоинты /api/v1/auth/*
 ```
 
 `Application.module()` вызывает отдельные `configureX()` функции для каждого concern.
@@ -29,13 +40,22 @@ src/main/kotlin/com/schlepping/arcana/
 
 Слои: Routes → Service → Repository → LlmProvider
 
+- Service работает с доменными моделями, НЕ с `ResultRow` и таблицами из `db/`
+- Repository маппит `ResultRow` → доменные модели и возвращает их наверх
+
 Целевая middleware chain (см. ROADMAP.md):
 IP rate limit → JWT → Device rate limit → Attestation → Validation → Business limits → Model routing → LLM → Logging
+
+## Стиль кода Kotlin
+
+- **Корутины везде.** Ktor — корутиновый фреймворк. Все IO-операции должны быть `suspend`. Exposed: `newSuspendedTransaction {}` вместо `transaction {}`. Единственное исключение: `SchemaUtils.create()` на старте.
+- **Идиоматичный Kotlin:** `?.let {} ?: ...`, scope functions (`let`, `also`, `apply`, `run`), expression body для коротких функций, trailing commas
+- **Не писать Java на Kotlin:** избегать if/else где работает `?.let`/`?:`, избегать явных null-чеков где работает safe call chain
 
 ## Exposed ORM
 
 - Таблицы: `object XxxTable : Table("xxx")`
-- Запросы через `transaction { }`
+- Запросы через `newSuspendedTransaction { }` (suspend, переключается на Dispatchers.IO)
 - `SchemaUtils.create()` на старте (Flyway запланирован на v2.0)
 
 ## Serialization

@@ -6,10 +6,12 @@ ktor:
         port: 8080
 
 jwt:
-    domain: "https://jwt-provider-domain/"
-    audience: "jwt-audience"
-    realm: "ktor sample app"
-    secret: "secret"
+    secret: "change-me-in-production"
+    issuer: "arcana-server"
+    audience: "arcana-app"
+    realm: "arcana"
+    accessTokenExpireMin: 15
+    refreshTokenExpireDays: 30
 
 database:
   url: "jdbc:postgresql://localhost:5435/arcana"

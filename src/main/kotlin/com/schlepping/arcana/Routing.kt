@@ -1,20 +1,23 @@
 package com.schlepping.arcana
 
+import com.schlepping.arcana.auth.AuthService
+import com.schlepping.arcana.auth.authRoutes
 import io.ktor.server.application.*
-import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 
 fun Application.configureRouting() {
-    routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
+    val authService by inject<AuthService>()
 
+    routing {
         get("/health") {
             call.respond(mapOf("status" to "ok"))
         }
 
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
+
+        authRoutes(authService)
     }
 }

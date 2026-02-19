@@ -1,5 +1,6 @@
 package com.schlepping.arcana
 
+import com.schlepping.arcana.plugins.configureDI
 import com.schlepping.arcana.plugins.configureDatabase
 import com.schlepping.arcana.plugins.configureMonitoring
 import com.schlepping.arcana.plugins.configureSecurity
@@ -12,9 +13,10 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    configureDI()
+    configureDatabase()
     configureSerialization()
     configureMonitoring()
     configureSecurity()
     configureRouting()
-    configureDatabase()
 }
