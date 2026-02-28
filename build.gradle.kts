@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.swagger)
     implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.cors)
 
     implementation(libs.postgresql)
     implementation(libs.exposed.core)
