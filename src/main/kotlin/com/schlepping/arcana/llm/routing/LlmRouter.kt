@@ -1,4 +1,7 @@
-package com.schlepping.arcana.llm
+package com.schlepping.arcana.llm.routing
+
+import com.schlepping.arcana.llm.RequestType
+import com.schlepping.arcana.user.UserTier
 
 class LlmRouter(private val config: LlmRoutingConfig) {
 

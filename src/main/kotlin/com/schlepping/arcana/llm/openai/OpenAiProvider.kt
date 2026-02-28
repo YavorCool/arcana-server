@@ -1,5 +1,9 @@
-package com.schlepping.arcana.llm
+package com.schlepping.arcana.llm.openai
 
+import com.schlepping.arcana.llm.LlmException
+import com.schlepping.arcana.llm.LlmPrompt
+import com.schlepping.arcana.llm.LlmProvider
+import com.schlepping.arcana.llm.LlmResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -24,6 +28,7 @@ class OpenAiProvider(
             ),
         )
 
+        val failureMessage = "OpenAI request failed after ${config.maxRetries + 1} attempts"
         var lastException: Exception? = null
 
         repeat(config.maxRetries + 1) { attempt ->
@@ -70,11 +75,11 @@ class OpenAiProvider(
                     log.warn("OpenAI request failed, retrying in ${delayMs}ms (attempt ${attempt + 1})", e)
                     delay(delayMs)
                 } else {
-                    throw LlmException("OpenAI request failed after ${config.maxRetries + 1} attempts", e)
+                    throw LlmException(failureMessage, e)
                 }
             }
         }
 
-        throw LlmException("OpenAI request failed after ${config.maxRetries + 1} attempts", lastException)
+        throw LlmException(failureMessage, lastException)
     }
 }

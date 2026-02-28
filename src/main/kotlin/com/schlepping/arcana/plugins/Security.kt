@@ -2,6 +2,7 @@ package com.schlepping.arcana.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.schlepping.arcana.auth.JwtClaims
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -24,7 +25,7 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                val deviceId = credential.payload.getClaim("deviceId")?.asString()
+                val deviceId = credential.payload.getClaim(JwtClaims.DEVICE_ID)?.asString()
                 if (credential.payload.audience.contains(jwtAudience) && deviceId != null) {
                     JWTPrincipal(credential.payload)
                 } else null

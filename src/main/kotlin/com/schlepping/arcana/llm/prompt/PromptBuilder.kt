@@ -1,4 +1,6 @@
-package com.schlepping.arcana.llm
+package com.schlepping.arcana.llm.prompt
+
+import com.schlepping.arcana.llm.LlmPrompt
 
 enum class DailyCardFormat { BRIEF, FULL }
 
@@ -13,8 +15,8 @@ class PromptBuilder {
         val orientation = if (isReversed) "reversed" else "upright"
 
         val formatInstruction = when (format) {
-            DailyCardFormat.BRIEF -> "Provide a brief daily card interpretation (2-3 short paragraphs)."
-            DailyCardFormat.FULL -> "Provide a full, detailed daily card interpretation (4-5 paragraphs with deeper insight)."
+            DailyCardFormat.BRIEF -> "Provide a brief daily card interpretation (2-3 sentences, capturing the essence)."
+            DailyCardFormat.FULL -> "Provide a full daily card interpretation (3-5 sentences plus an invitation to reflect)."
         }
 
         val querentSection = querentName?.let { "The querent's name is $it. " } ?: ""

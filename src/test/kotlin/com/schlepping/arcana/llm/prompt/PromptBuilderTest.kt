@@ -1,4 +1,4 @@
-package com.schlepping.arcana.llm
+package com.schlepping.arcana.llm.prompt
 
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -95,8 +95,8 @@ class PromptBuilderTest {
             querentName = null,
         )
 
-        assertTrue(prompt.systemMessage.contains("Arcana"))
-        assertTrue(prompt.systemMessage.contains("tarot"))
+        assertTrue(prompt.systemMessage.contains("ARCANA", ignoreCase = true))
+        assertTrue(prompt.systemMessage.contains("tarot", ignoreCase = true))
     }
 
     @Test

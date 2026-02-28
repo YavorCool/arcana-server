@@ -4,7 +4,11 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.schlepping.arcana.FakeDailyCardRepository
 import com.schlepping.arcana.FakeLlmProvider
+import com.schlepping.arcana.auth.JwtClaims
 import com.schlepping.arcana.llm.*
+import com.schlepping.arcana.llm.prompt.PromptBuilder
+import com.schlepping.arcana.llm.routing.LlmRouter
+import com.schlepping.arcana.llm.routing.LlmRoutingConfig
 import com.schlepping.arcana.plugins.configureStatusPages
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -35,8 +39,8 @@ class DailyCardRoutesTest {
     ): String = JWT.create()
         .withIssuer(jwtIssuer)
         .withAudience(jwtAudience)
-        .withClaim("deviceId", deviceId.toString())
-        .apply { if (tier != null) withClaim("tier", tier) }
+        .withClaim(JwtClaims.DEVICE_ID, deviceId.toString())
+        .apply { if (tier != null) withClaim(JwtClaims.TIER, tier) }
         .withExpiresAt(java.util.Date(System.currentTimeMillis() + 60_000))
         .sign(Algorithm.HMAC256(jwtSecret))
 
@@ -54,7 +58,7 @@ class DailyCardRoutesTest {
                         .build()
                 )
                 validate { credential ->
-                    val deviceId = credential.payload.getClaim("deviceId")?.asString()
+                    val deviceId = credential.payload.getClaim(JwtClaims.DEVICE_ID)?.asString()
                     if (credential.payload.audience.contains(jwtAudience) && deviceId != null) {
                         JWTPrincipal(credential.payload)
                     } else null
