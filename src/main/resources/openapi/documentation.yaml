@@ -42,6 +42,42 @@ components:
           type: string
           example: "e3e0ab92-e4d5-4597-81ee-e0b707be02f5"
 
+    DailyCardRequest:
+      type: object
+      required: [cardName, isReversed]
+      properties:
+        cardName:
+          type: string
+          example: "The Fool"
+        isReversed:
+          type: boolean
+          example: false
+        querentName:
+          type: string
+          nullable: true
+          example: "Nikita"
+
+    DailyCardResponse:
+      type: object
+      properties:
+        readingId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        cardName:
+          type: string
+          example: "The Fool"
+        isReversed:
+          type: boolean
+          example: false
+        interpretation:
+          type: string
+          example: "The Fool speaks of new beginnings..."
+        cached:
+          type: boolean
+          description: "true if this reading was served from today's cache"
+          example: false
+
     ApiError:
       type: object
       properties:
@@ -124,6 +160,48 @@ paths:
                 $ref: "#/components/schemas/TokenResponse"
         "400":
           description: "Invalid or expired refresh token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /api/v1/readings/daily:
+    post:
+      tags:
+        - "Daily Card"
+      summary: "Get daily card reading"
+      description: |
+        Generate an AI interpretation for the daily tarot card.
+        Returns cached result if already requested today for this device.
+        Premium users and Monday free users get a full reading (4-5 paragraphs),
+        free users on other days get a brief reading (2-3 paragraphs).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyCardRequest"
+      responses:
+        "200":
+          description: "Daily card interpretation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyCardResponse"
+        "401":
+          description: "Missing or invalid JWT token"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Token is not valid or has expired"
+        "503":
+          description: "AI service temporarily unavailable"
           content:
             application/json:
               schema:

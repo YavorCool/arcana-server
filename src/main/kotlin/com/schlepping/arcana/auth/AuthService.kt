@@ -2,6 +2,7 @@ package com.schlepping.arcana.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.schlepping.arcana.user.UserTier
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -11,11 +12,15 @@ class AuthService(
 ) {
 
     suspend fun register(deviceId: UUID, platform: String): TokenResponse {
-        repository.findDevice(deviceId)?.let {
+        val device = repository.findDevice(deviceId)?.also {
             repository.updateLastSeen(deviceId)
-        } ?: repository.createDevice(deviceId, platform)
+        }
+        if (device == null) {
+            repository.createDevice(deviceId, platform)
+        }
 
-        return generateTokenPair(deviceId)
+        val tier = device?.tier ?: UserTier.FREE.value
+        return generateTokenPair(deviceId, tier)
     }
 
     suspend fun refresh(refreshToken: String): TokenResponse {
@@ -29,14 +34,17 @@ class AuthService(
 
         repository.deleteRefreshToken(refreshToken)
         repository.updateLastSeen(stored.deviceId)
-        return generateTokenPair(stored.deviceId)
+        val device = repository.findDevice(stored.deviceId)
+        val tier = device?.tier ?: UserTier.FREE.value
+        return generateTokenPair(stored.deviceId, tier)
     }
 
-    private suspend fun generateTokenPair(deviceId: UUID): TokenResponse {
+    private suspend fun generateTokenPair(deviceId: UUID, tier: String = UserTier.FREE.value): TokenResponse {
         val accessToken = JWT.create()
             .withIssuer(jwtConfig.issuer)
             .withAudience(jwtConfig.audience)
-            .withClaim("deviceId", deviceId.toString())
+            .withClaim(JwtClaims.DEVICE_ID, deviceId.toString())
+            .withClaim(JwtClaims.TIER, tier)
             .withExpiresAt(java.util.Date(System.currentTimeMillis() + jwtConfig.accessTokenExpireMin * 60_000))
             .sign(Algorithm.HMAC256(jwtConfig.secret))
 

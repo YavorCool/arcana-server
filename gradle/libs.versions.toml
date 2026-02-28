@@ -31,6 +31,11 @@ ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.
 ktor-server-swagger = { module = "io.ktor:ktor-server-swagger", version.ref = "ktor" }
 
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref ="ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
@@ -39,6 +44,8 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version
 
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
+
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.2" }
 
 
 [plugins]

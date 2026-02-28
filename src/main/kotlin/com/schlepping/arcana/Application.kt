@@ -1,5 +1,6 @@
 package com.schlepping.arcana
 
+import com.schlepping.arcana.plugins.configureCORS
 import com.schlepping.arcana.plugins.configureDI
 import com.schlepping.arcana.plugins.configureDatabase
 import com.schlepping.arcana.plugins.configureMonitoring
@@ -18,6 +19,7 @@ fun Application.module() {
     configureDatabase()
     configureSerialization()
     configureMonitoring()
+    configureCORS()
     configureSecurity()
     configureRouting()
     configureStatusPages()

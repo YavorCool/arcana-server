@@ -1,5 +1,6 @@
 package com.schlepping.arcana.plugins
 
+import com.schlepping.arcana.llm.LlmException
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
@@ -18,6 +19,14 @@ fun Application.configureStatusPages() {
             call.respond(
                 HttpStatusCode.BadRequest,
                 ApiError(error = cause.message ?: "Bad request", code = "BAD_REQUEST"),
+            )
+        }
+
+        exception<LlmException> { call, cause ->
+            this@configureStatusPages.log.error("LLM error", cause)
+            call.respond(
+                HttpStatusCode.ServiceUnavailable,
+                ApiError(error = "AI service temporarily unavailable", code = "LLM_ERROR"),
             )
         }
 
