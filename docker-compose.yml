@@ -2,7 +2,7 @@ services:
   app:
     image: ghcr.io/yavorcool/arcana-server:latest
     ports:
-      - "8080:8080"
+      - "10.8.0.1:8080:8080"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -17,7 +17,7 @@ services:
   postgres:
     image: postgres:17
     ports:
-      - "5435:5432"
+      - "10.8.0.1:5435:5432"
     environment:
       - POSTGRES_DB=arcana
       - POSTGRES_USER=arcana
