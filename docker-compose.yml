@@ -9,6 +9,7 @@ services:
       - DB_NAME=arcana
       - DB_USER=arcana
       - DB_PASSWORD=arcana_dev
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

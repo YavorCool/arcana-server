@@ -17,3 +17,17 @@ database:
   url: "jdbc:postgresql://localhost:5435/arcana"
   user: "arcana"
   password: "arcana_dev"
+
+llm:
+  openai:
+    apiKey: ${?OPENAI_API_KEY}
+    baseUrl: "https://api.openai.com/v1"
+    timeoutMs: 30000
+    maxRetries: 2
+  routing:
+    premiumReading: "gpt-5"
+    freeReading: "gpt-5-mini"
+    premiumChat: "gpt-5-mini"
+    freeChat: "gpt-5-nano"
+    dailyCard: "gpt-5-mini"
+    firstReading: "gpt-5"

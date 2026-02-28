@@ -12,3 +12,9 @@ build/
 
 # App
 *.log
+
+# Secrets
+.env
+
+# Local Docker override
+docker-compose.override.yml
