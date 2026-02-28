@@ -6,7 +6,7 @@ info:
 servers:
   - url: "http://localhost:8080"
     description: "Local dev"
-  - url: "http://194.59.40.207:8080"
+  - url: "http://194.87.96.68:8080"
     description: "VPS"
 
 components:
