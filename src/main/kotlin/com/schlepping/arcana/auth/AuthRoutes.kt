@@ -15,7 +15,7 @@ fun Route.authRoutes(authService: AuthService) {
             call.respond(HttpStatusCode.Created, response)
         }
 
-    post("/refresh") {
+        post("/refresh") {
             val request = call.receive<RefreshRequest>()
             val response = authService.refresh(request.refreshToken)
             call.respond(response)
