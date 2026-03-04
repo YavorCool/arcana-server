@@ -11,6 +11,6 @@ fun Application.configureCORS() {
         allowMethod(HttpMethod.Options)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
-        anyHost()
+        allowHost("localhost:8080")
     }
 }

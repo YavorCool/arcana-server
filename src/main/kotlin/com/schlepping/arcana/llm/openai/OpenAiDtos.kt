@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class OpenAiRequest(
     val model: String,
     val messages: List<OpenAiMessage>,
-    val temperature: Double = 0.7,
+    val temperature: Double = 1.0,
     @SerialName("max_tokens") val maxTokens: Int = 2048,
 )
 

@@ -14,6 +14,7 @@ fun Application.configureSecurity() {
     val jwtIssuer = environment.config.property("jwt.issuer").getString()
     val jwtRealm = environment.config.property("jwt.realm").getString()
     val jwtSecret = environment.config.property("jwt.secret").getString()
+    require(jwtSecret.isNotBlank()) { "JWT_SECRET environment variable is required" }
     authentication {
         jwt("auth-jwt") {
             realm = jwtRealm

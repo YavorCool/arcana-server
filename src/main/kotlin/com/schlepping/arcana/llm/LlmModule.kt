@@ -44,7 +44,7 @@ fun Application.llmModule() = module {
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true
-                    isLenient = true
+                    isLenient = false
                 })
             }
             install(HttpTimeout) {

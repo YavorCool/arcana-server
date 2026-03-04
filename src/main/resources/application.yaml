@@ -6,7 +6,7 @@ ktor:
         port: 8080
 
 jwt:
-    secret: "change-me-in-production"
+    secret: ${JWT_SECRET}
     issuer: "arcana-server"
     audience: "arcana-app"
     realm: "arcana"
