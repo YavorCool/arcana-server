@@ -9,6 +9,8 @@ import com.schlepping.arcana.llm.routing.LlmRoutingConfig
 import com.schlepping.arcana.user.UserTier
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceTimeBy
 import java.time.DayOfWeek
 import java.util.UUID
 import kotlin.test.Test
@@ -81,9 +83,10 @@ class DailyCardServiceTest {
 
     @Test
     fun `monday free tier uses full format`() = runTest {
-        val mondayService = DailyCardService(fakeLlm, fakeRepo, router, promptBuilder) {
-            DayOfWeek.MONDAY
-        }
+        val mondayService = DailyCardService(
+            fakeLlm, fakeRepo, router, promptBuilder,
+            dayOfWeekProvider = { DayOfWeek.MONDAY },
+        )
 
         mondayService.getDailyCard(deviceId, "The Moon", true, UserTier.FREE, null)
 
@@ -93,9 +96,10 @@ class DailyCardServiceTest {
 
     @Test
     fun `non-monday free tier uses brief format`() = runTest {
-        val tuesdayService = DailyCardService(fakeLlm, fakeRepo, router, promptBuilder) {
-            DayOfWeek.TUESDAY
-        }
+        val tuesdayService = DailyCardService(
+            fakeLlm, fakeRepo, router, promptBuilder,
+            dayOfWeekProvider = { DayOfWeek.TUESDAY },
+        )
 
         tuesdayService.getDailyCard(deviceId, "The Sun", false, UserTier.FREE, null)
 
@@ -145,6 +149,24 @@ class DailyCardServiceTest {
         // Nothing should be cached
         val cached = failRepo.findTodaysDailyCard(failDeviceId)
         assertEquals(null, cached, "Failed LLM call should not cache anything")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `periodic cleanup clears locks after interval`() = kotlinx.coroutines.test.runTest {
+        val service = DailyCardService(
+            fakeLlm, fakeRepo, router, promptBuilder,
+            scope = this,
+            cleanupIntervalMs = 100L,
+        )
+
+        service.getDailyCard(deviceId, "The Fool", false, UserTier.FREE, null)
+        assertTrue(service.lockCount > 0)
+
+        advanceTimeBy(150)
+
+        assertEquals(0, service.lockCount)
+        service.close()
     }
 
     private fun runTest(block: suspend kotlinx.coroutines.CoroutineScope.() -> Unit) =

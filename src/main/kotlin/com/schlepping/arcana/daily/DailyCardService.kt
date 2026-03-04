@@ -5,6 +5,7 @@ import com.schlepping.arcana.llm.prompt.DailyCardFormat
 import com.schlepping.arcana.llm.prompt.PromptBuilder
 import com.schlepping.arcana.llm.routing.LlmRouter
 import com.schlepping.arcana.user.UserTier
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.DayOfWeek
@@ -19,9 +20,24 @@ class DailyCardService(
     private val router: LlmRouter,
     private val promptBuilder: PromptBuilder,
     private val dayOfWeekProvider: () -> DayOfWeek = { LocalDate.now(ZoneOffset.UTC).dayOfWeek },
+    scope: CoroutineScope? = null,
+    cleanupIntervalMs: Long = 3_600_000L,
 ) {
 
     private val locks = ConcurrentHashMap<UUID, Mutex>()
+
+    internal val lockCount: Int get() = locks.size
+
+    private val cleanupJob: Job? = scope?.launch {
+        while (isActive) {
+            delay(cleanupIntervalMs)
+            locks.clear()
+        }
+    }
+
+    fun close() {
+        cleanupJob?.cancel()
+    }
 
     suspend fun getDailyCard(
         deviceId: UUID,
