@@ -13,8 +13,11 @@ class AuthService(
 
     suspend fun register(deviceId: UUID, platform: String): TokenResponse {
         val device = repository.upsertDevice(deviceId, platform)
-        repository.deleteRefreshTokensByDevice(deviceId)
-        return generateTokenPair(deviceId, device.tier)
+        val accessToken = createAccessToken(deviceId, device.tier)
+        val refreshToken = UUID.randomUUID().toString()
+        val refreshExpiresAt = LocalDateTime.now().plusDays(jwtConfig.refreshTokenExpireDays)
+        repository.replaceRefreshTokensForDevice(deviceId, refreshToken, refreshExpiresAt)
+        return TokenResponse(accessToken, refreshToken)
     }
 
     suspend fun refresh(refreshToken: String): TokenResponse {
@@ -31,7 +34,8 @@ class AuthService(
 
         val newRefreshToken = UUID.randomUUID().toString()
         val refreshExpiresAt = LocalDateTime.now().plusDays(jwtConfig.refreshTokenExpireDays)
-        repository.rotateRefreshToken(refreshToken, newRefreshToken, stored.deviceId, refreshExpiresAt)
+        val rotated = repository.rotateRefreshToken(refreshToken, newRefreshToken, stored.deviceId, refreshExpiresAt)
+        if (!rotated) throw AuthException.InvalidRefreshToken()
         repository.updateLastSeen(stored.deviceId)
 
         val accessToken = createAccessToken(stored.deviceId, tier)
@@ -46,12 +50,4 @@ class AuthService(
             .withClaim(JwtClaims.TIER, tier)
             .withExpiresAt(java.util.Date(System.currentTimeMillis() + jwtConfig.accessTokenExpireMin * 60_000))
             .sign(Algorithm.HMAC256(jwtConfig.secret))
-
-    private suspend fun generateTokenPair(deviceId: UUID, tier: String = UserTier.FREE.value): TokenResponse {
-        val accessToken = createAccessToken(deviceId, tier)
-        val refreshToken = UUID.randomUUID().toString()
-        val refreshExpiresAt = LocalDateTime.now().plusDays(jwtConfig.refreshTokenExpireDays)
-        repository.saveRefreshToken(refreshToken, deviceId, refreshExpiresAt)
-        return TokenResponse(accessToken = accessToken, refreshToken = refreshToken)
-    }
 }
