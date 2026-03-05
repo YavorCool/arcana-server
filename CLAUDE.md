@@ -86,3 +86,12 @@ docker compose up -d             # PostgreSQL + приложение
 - `docker-compose.yml` — PostgreSQL 17 + приложение
 - `Dockerfile` — multi-stage build (JDK 21 build → JRE 21 run)
 - `gradle/libs.versions.toml` — версии зависимостей
+
+### Testing — TDD
+
+Проект следует TDD-подходу: **тесты пишутся до реализации**.
+
+- **Порядок:** Test → Red → Implement → Green → Refactor
+- **Service-тесты:** для каждого Service — свой `FakeRepository` (пример: `FakeDailyCardRepository`). Тестируем бизнес-логику без БД
+- **Route-тесты:** через `testApplication` + JWT + fake providers (пример: `DailyCardRoutesTest`)
+- **Конвенция:** каждый milestone включает тесты на свои Service-классы. Тесты — часть Definition of Done задачи, не отдельная задача
