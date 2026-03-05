@@ -1,5 +1,6 @@
 package com.schlepping.arcana.plugins
 
+import com.schlepping.arcana.auth.AuthException
 import com.schlepping.arcana.llm.LlmException
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -15,6 +16,13 @@ data class ApiError(
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
+        exception<AuthException> { call, cause ->
+            call.respond(
+                HttpStatusCode.Unauthorized,
+                ApiError(error = cause.message ?: "Auth error", code = "AUTH_ERROR"),
+            )
+        }
+
         exception<IllegalArgumentException> { call, cause ->
             call.respond(
                 HttpStatusCode.BadRequest,

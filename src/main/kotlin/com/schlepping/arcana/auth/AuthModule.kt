@@ -13,6 +13,6 @@ fun Application.authModule() = module {
             refreshTokenExpireDays = environment.config.property("jwt.refreshTokenExpireDays").getString().toLong(),
         )
     }
-    single { AuthRepository() }
+    single<AuthRepository> { AuthRepositoryImpl() }
     single { AuthService(get(), get()) }
 }
