@@ -17,9 +17,10 @@ interface AuthRepository {
     suspend fun findRefreshToken(token: String): StoredRefreshToken?
     suspend fun deleteRefreshToken(token: String)
     suspend fun deleteRefreshTokensByDevice(deviceId: UUID)
+    suspend fun replaceRefreshTokensForDevice(deviceId: UUID, newToken: String, expiresAt: LocalDateTime)
     suspend fun rotateRefreshToken(
         oldToken: String, newToken: String, deviceId: UUID, expiresAt: LocalDateTime,
-    )
+    ): Boolean
 }
 
 class AuthRepositoryImpl : AuthRepository {
@@ -77,15 +78,28 @@ class AuthRepositoryImpl : AuthRepository {
         RefreshTokens.deleteWhere { RefreshTokens.deviceId eq deviceId }
     }
 
-    override suspend fun rotateRefreshToken(
-        oldToken: String, newToken: String, deviceId: UUID, expiresAt: LocalDateTime,
+    override suspend fun replaceRefreshTokensForDevice(
+        deviceId: UUID, newToken: String, expiresAt: LocalDateTime,
     ): Unit = newSuspendedTransaction {
-        RefreshTokens.deleteWhere { RefreshTokens.token eq oldToken }
+        RefreshTokens.deleteWhere { RefreshTokens.deviceId eq deviceId }
         RefreshTokens.insert {
             it[RefreshTokens.token] = newToken
             it[RefreshTokens.deviceId] = deviceId
             it[RefreshTokens.expiresAt] = expiresAt
         }
+    }
+
+    override suspend fun rotateRefreshToken(
+        oldToken: String, newToken: String, deviceId: UUID, expiresAt: LocalDateTime,
+    ): Boolean = newSuspendedTransaction {
+        val deleted = RefreshTokens.deleteWhere { RefreshTokens.token eq oldToken }
+        if (deleted == 0) return@newSuspendedTransaction false
+        RefreshTokens.insert {
+            it[RefreshTokens.token] = newToken
+            it[RefreshTokens.deviceId] = deviceId
+            it[RefreshTokens.expiresAt] = expiresAt
+        }
+        true
     }
 
     private fun ResultRow.toDevice() = Device(

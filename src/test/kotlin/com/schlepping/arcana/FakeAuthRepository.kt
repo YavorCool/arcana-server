@@ -47,11 +47,17 @@ class FakeAuthRepository : AuthRepository {
         tokens.entries.removeAll { it.value.deviceId == deviceId }
     }
 
+    override suspend fun replaceRefreshTokensForDevice(deviceId: UUID, newToken: String, expiresAt: LocalDateTime) {
+        tokens.entries.removeAll { it.value.deviceId == deviceId }
+        tokens[newToken] = StoredRefreshToken(token = newToken, deviceId = deviceId, expiresAt = expiresAt)
+    }
+
     override suspend fun rotateRefreshToken(
         oldToken: String, newToken: String, deviceId: UUID, expiresAt: LocalDateTime,
-    ) {
-        tokens.remove(oldToken)
-        tokens[newToken] = StoredRefreshToken(token = newToken, deviceId = deviceId, expiresAt = expiresAt)
+    ): Boolean {
+        val removed = tokens.remove(oldToken) ?: return false
+        tokens[newToken] = StoredRefreshToken(token = newToken, deviceId = removed.deviceId, expiresAt = expiresAt)
+        return true
     }
 
     fun deviceCount(): Int = devices.size
