@@ -2,6 +2,7 @@ package com.schlepping.arcana.plugins
 
 import com.schlepping.arcana.auth.AuthException
 import com.schlepping.arcana.llm.LlmException
+import com.schlepping.arcana.spread.SpreadException
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
@@ -16,6 +17,13 @@ data class ApiError(
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
+        exception<SpreadException.DailyLimitReached> { call, cause ->
+            call.respond(
+                HttpStatusCode.TooManyRequests,
+                ApiError(error = cause.message ?: "Daily limit reached", code = "DAILY_LIMIT_REACHED"),
+            )
+        }
+
         exception<AuthException> { call, cause ->
             call.respond(
                 HttpStatusCode.Unauthorized,

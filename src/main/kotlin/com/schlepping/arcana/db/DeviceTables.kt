@@ -14,6 +14,7 @@ object Devices : Table("devices") {
     val paymentId = varchar("payment_id", 255).nullable()
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val lastSeenAt = datetime("last_seen_at").defaultExpression(CurrentDateTime)
+    val hasCompletedSpread = bool("has_completed_spread").default(false)
 
     override val primaryKey = PrimaryKey(deviceId)
 }
