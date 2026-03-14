@@ -34,6 +34,9 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.java.time)
 
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
+
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)

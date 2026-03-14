@@ -2,6 +2,7 @@
 exposed = "0.61.0"
 kotlin = "2.3.0"
 ktor = "3.4.0"
+flyway = "11.8.0"
 logback = "1.5.18"
 postgres = "42.7.9"
 koin = "4.0.4"
@@ -33,6 +34,9 @@ ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 

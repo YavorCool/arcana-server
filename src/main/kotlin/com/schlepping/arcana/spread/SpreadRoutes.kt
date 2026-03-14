@@ -13,41 +13,45 @@ import java.util.UUID
 fun Route.spreadRoutes(service: SpreadService) {
     authenticate("auth-jwt") {
         route("/api/v1/readings") {
-            post {
-                val principal = call.principal<JWTPrincipal>()!!
-                val deviceId = principal.deviceId()
-                val tier = principal.userTier()
-
-                val request = call.receive<CreateReadingRequest>()
-                val response = service.createReading(deviceId, request, tier)
-
-                call.respond(HttpStatusCode.Created, response)
-            }
-
-            get {
-                val principal = call.principal<JWTPrincipal>()!!
-                val deviceId = principal.deviceId()
-
-                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 20
-                val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
-
-                val response = service.listReadings(deviceId, limit, offset)
-                call.respond(HttpStatusCode.OK, response)
-            }
-
-            get("/{readingId}") {
-                val principal = call.principal<JWTPrincipal>()!!
-                val deviceId = principal.deviceId()
-
-                val readingId = try {
-                    UUID.fromString(call.parameters["readingId"])
-                } catch (_: IllegalArgumentException) {
-                    throw IllegalArgumentException("Invalid reading ID format")
-                }
-
-                val response = service.getReading(deviceId, readingId)
-                call.respond(HttpStatusCode.OK, response)
-            }
+            post { createReading(service) }
+            get { listReadings(service) }
+            get("/{readingId}") { getReading(service) }
         }
     }
+}
+
+private suspend fun RoutingContext.createReading(service: SpreadService) {
+    val principal = call.principal<JWTPrincipal>()!!
+    val deviceId = principal.deviceId()
+    val tier = principal.userTier()
+
+    val request = call.receive<CreateReadingRequest>()
+    val response = service.createReading(deviceId, request, tier)
+
+    call.respond(HttpStatusCode.Created, response)
+}
+
+private suspend fun RoutingContext.listReadings(service: SpreadService) {
+    val principal = call.principal<JWTPrincipal>()!!
+    val deviceId = principal.deviceId()
+
+    val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 20
+    val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
+
+    val response = service.listReadings(deviceId, limit, offset)
+    call.respond(HttpStatusCode.OK, response)
+}
+
+private suspend fun RoutingContext.getReading(service: SpreadService) {
+    val principal = call.principal<JWTPrincipal>()!!
+    val deviceId = principal.deviceId()
+
+    val readingId = try {
+        UUID.fromString(call.parameters["readingId"])
+    } catch (_: IllegalArgumentException) {
+        throw IllegalArgumentException("Invalid reading ID format")
+    }
+
+    val response = service.getReading(deviceId, readingId)
+    call.respond(HttpStatusCode.OK, response)
 }
