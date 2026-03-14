@@ -1,5 +1,6 @@
 package com.schlepping.arcana.daily
 
+import com.schlepping.arcana.spread.CardData
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals

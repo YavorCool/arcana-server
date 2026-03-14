@@ -1,6 +1,7 @@
 package com.schlepping.arcana.daily
 
 import com.schlepping.arcana.db.Readings
+import com.schlepping.arcana.spread.CardData
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert

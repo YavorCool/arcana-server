@@ -1,7 +1,6 @@
 package com.schlepping.arcana.daily
 
 import kotlinx.serialization.Serializable
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -30,8 +29,3 @@ data class DailyCardReading(
     val createdAt: LocalDateTime,
 )
 
-@Serializable
-data class CardData(
-    val cardName: String,
-    val isReversed: Boolean,
-)
