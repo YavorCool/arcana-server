@@ -76,6 +76,111 @@ components:
           description: "true if this reading was served from today's cache"
           example: false
 
+    CardData:
+      type: object
+      required: [cardName, isReversed]
+      properties:
+        cardName:
+          type: string
+          example: "The Fool"
+        isReversed:
+          type: boolean
+          example: false
+
+    CreateReadingRequest:
+      type: object
+      required: [spreadType, cards]
+      properties:
+        spreadType:
+          type: string
+          enum: [yes_no, past_present_future, question_card]
+          example: "past_present_future"
+        question:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: "What does the future hold for my career?"
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardData"
+          example:
+            - cardName: "The Fool"
+              isReversed: false
+            - cardName: "The Tower"
+              isReversed: true
+            - cardName: "The Star"
+              isReversed: false
+        querentName:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: "Nikita"
+
+    CreateReadingResponse:
+      type: object
+      properties:
+        readingId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        interpretation:
+          type: string
+          example: "The cards reveal a journey of transformation..."
+
+    ReadingSummary:
+      type: object
+      properties:
+        readingId:
+          type: string
+          format: uuid
+        spreadType:
+          type: string
+          example: "past_present_future"
+        question:
+          type: string
+          nullable: true
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardData"
+        createdAt:
+          type: string
+          format: date-time
+
+    ReadingDetail:
+      type: object
+      properties:
+        readingId:
+          type: string
+          format: uuid
+        spreadType:
+          type: string
+          example: "yes_no"
+        question:
+          type: string
+          nullable: true
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardData"
+        interpretation:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ReadingsListResponse:
+      type: object
+      properties:
+        readings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReadingSummary"
+        hasMore:
+          type: boolean
+          example: false
+
     ApiError:
       type: object
       properties:
@@ -162,6 +267,145 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
+  /api/v1/readings:
+    post:
+      tags:
+        - "Spreads"
+      summary: "Create spread reading"
+      description: |
+        Create a tarot spread reading with AI interpretation.
+        Free tier: 1 spread per day. Premium: unlimited.
+        First-ever spread for a device gets GPT-5 (premium model) regardless of tier.
+        Spread type `daily_card` is not allowed here — use /api/v1/readings/daily instead.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReadingRequest"
+      responses:
+        "201":
+          description: "Reading created with AI interpretation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateReadingResponse"
+        "400":
+          description: "Validation error (invalid spread type, wrong card count, unknown card, duplicate cards, question too long)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Missing or invalid JWT token"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Token is not valid or has expired"
+        "429":
+          description: "Daily spread limit reached (Free tier)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                error: "Daily spread limit reached"
+                code: "DAILY_LIMIT_REACHED"
+        "503":
+          description: "AI service temporarily unavailable"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    get:
+      tags:
+        - "Spreads"
+      summary: "List readings"
+      description: |
+        List spread readings for the authenticated device.
+        Sorted by creation date (newest first). Does not include daily card readings.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 50
+          description: "Number of readings to return (max 50, clamped)"
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: "Number of readings to skip"
+      responses:
+        "200":
+          description: "List of readings"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadingsListResponse"
+        "401":
+          description: "Missing or invalid JWT token"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Token is not valid or has expired"
+
+  /api/v1/readings/{readingId}:
+    get:
+      tags:
+        - "Spreads"
+      summary: "Get reading detail"
+      description: "Get full details of a specific spread reading, including interpretation."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: readingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Reading UUID"
+      responses:
+        "200":
+          description: "Reading detail"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadingDetail"
+        "400":
+          description: "Invalid UUID format or reading not found / belongs to another device"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Missing or invalid JWT token"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Token is not valid or has expired"
 
   /api/v1/readings/daily:
     post:
