@@ -95,3 +95,7 @@ docker compose up -d             # PostgreSQL + приложение
 - **Service-тесты:** для каждого Service — свой `FakeRepository` (пример: `FakeDailyCardRepository`). Тестируем бизнес-логику без БД
 - **Route-тесты:** через `testApplication` + JWT + fake providers (пример: `DailyCardRoutesTest`)
 - **Конвенция:** каждый milestone включает тесты на свои Service-классы. Тесты — часть Definition of Done задачи, не отдельная задача
+
+### Roadmap tracking
+
+После завершения задачи из `arcana-tarot-app/ROADMAP.md` — спроси разработчика, отметить ли её как выполненную (`- [x]`). Без явного подтверждения галочку не ставить.
