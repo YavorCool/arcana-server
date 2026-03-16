@@ -9,6 +9,7 @@ import com.schlepping.arcana.llm.*
 import com.schlepping.arcana.llm.prompt.PromptBuilder
 import com.schlepping.arcana.llm.routing.LlmRouter
 import com.schlepping.arcana.llm.routing.LlmRoutingConfig
+import com.schlepping.arcana.plugins.ApiError
 import com.schlepping.arcana.plugins.configureStatusPages
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -66,7 +67,7 @@ class SpreadRoutesTest {
                 challenge { _, _ ->
                     call.respond(
                         status = HttpStatusCode.Unauthorized,
-                        message = mapOf("error" to "Token is not valid or has expired"),
+                        message = ApiError(error = "Token is not valid or has expired", code = "AUTH_ERROR"),
                     )
                 }
             }
@@ -294,5 +295,37 @@ class SpreadRoutesTest {
         val body = Json.decodeFromString<ReadingsListResponse>(response.bodyAsText())
         assertEquals(2, body.readings.size)
         assertTrue(body.hasMore)
+    }
+
+    @Test
+    fun `POST readings with invalid JSON returns 400 INVALID_BODY`() = testApplication {
+        val deviceId = UUID.randomUUID()
+        val token = generateToken(deviceId)
+
+        application { configureTestApp() }
+
+        val response = client.post("/api/v1/readings") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("{broken json")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        val body = Json.decodeFromString<ApiError>(response.bodyAsText())
+        assertEquals("INVALID_BODY", body.code)
+    }
+
+    @Test
+    fun `POST readings without JWT returns 401 with AUTH_ERROR code`() = testApplication {
+        application { configureTestApp() }
+
+        val response = client.post("/api/v1/readings") {
+            contentType(ContentType.Application.Json)
+            setBody(yesNoBody())
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        val body = Json.decodeFromString<ApiError>(response.bodyAsText())
+        assertEquals("AUTH_ERROR", body.code)
     }
 }

@@ -34,7 +34,7 @@ fun Application.configureSecurity() {
             challenge { _, _ ->
                 call.respond(
                     status = HttpStatusCode.Unauthorized,
-                    message = mapOf("error" to "Token is not valid or has expired")
+                    message = ApiError(error = "Token is not valid or has expired", code = "AUTH_ERROR"),
                 )
             }
         }

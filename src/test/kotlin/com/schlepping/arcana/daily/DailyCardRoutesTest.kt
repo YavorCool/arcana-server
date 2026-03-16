@@ -9,6 +9,7 @@ import com.schlepping.arcana.llm.*
 import com.schlepping.arcana.llm.prompt.PromptBuilder
 import com.schlepping.arcana.llm.routing.LlmRouter
 import com.schlepping.arcana.llm.routing.LlmRoutingConfig
+import com.schlepping.arcana.plugins.ApiError
 import com.schlepping.arcana.plugins.configureStatusPages
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -66,7 +67,7 @@ class DailyCardRoutesTest {
                 challenge { _, _ ->
                     call.respond(
                         status = HttpStatusCode.Unauthorized,
-                        message = mapOf("error" to "Token is not valid or has expired"),
+                        message = ApiError(error = "Token is not valid or has expired", code = "AUTH_ERROR"),
                     )
                 }
             }

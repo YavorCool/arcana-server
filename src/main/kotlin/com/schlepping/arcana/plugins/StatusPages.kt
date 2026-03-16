@@ -46,6 +46,13 @@ fun Application.configureStatusPages() {
             )
         }
 
+        exception<io.ktor.server.plugins.BadRequestException> { call, _ ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ApiError(error = "Invalid request body", code = "INVALID_BODY"),
+            )
+        }
+
         exception<Throwable> { call, cause ->
             this@configureStatusPages.log.error("Unhandled exception", cause)
             call.respond(

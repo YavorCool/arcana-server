@@ -10,7 +10,11 @@ fun Route.authRoutes(authService: AuthService) {
     route("/api/v1/auth") {
         post("register") {
             val request = call.receive<RegisterRequest>()
-            val deviceId = UUID.fromString(request.deviceId)
+            val deviceId = try {
+                UUID.fromString(request.deviceId)
+            } catch (_: IllegalArgumentException) {
+                throw IllegalArgumentException("Invalid device ID format")
+            }
             val response = authService.register(deviceId, request.platform)
             call.respond(HttpStatusCode.Created, response)
         }
