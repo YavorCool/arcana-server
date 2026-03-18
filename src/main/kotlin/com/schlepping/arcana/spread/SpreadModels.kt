@@ -1,5 +1,6 @@
 package com.schlepping.arcana.spread
 
+import com.schlepping.arcana.chat.ChatMessageDto
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 import java.util.UUID
@@ -53,6 +54,7 @@ data class ReadingDetail(
     val cards: List<CardData>,
     val interpretation: String,
     val createdAt: String,
+    val chatMessages: List<ChatMessageDto> = emptyList(),
 )
 
 @Serializable

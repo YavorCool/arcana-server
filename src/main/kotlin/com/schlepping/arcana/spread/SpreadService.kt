@@ -1,5 +1,7 @@
 package com.schlepping.arcana.spread
 
+import com.schlepping.arcana.chat.ChatMessageDto
+import com.schlepping.arcana.chat.ChatRepository
 import com.schlepping.arcana.llm.LlmProvider
 import com.schlepping.arcana.llm.RequestType
 import com.schlepping.arcana.llm.prompt.PromptBuilder
@@ -15,6 +17,7 @@ class SpreadService(
     private val repository: SpreadRepository,
     private val router: LlmRouter,
     private val promptBuilder: PromptBuilder,
+    private val chatRepository: ChatRepository,
 ) {
 
     suspend fun createReading(
@@ -77,7 +80,15 @@ class SpreadService(
     suspend fun getReading(deviceId: UUID, readingId: UUID): ReadingDetail {
         val reading = repository.findReadingById(readingId, deviceId)
             ?: throw IllegalArgumentException("Reading not found")
-        return reading.toDetail()
+        val chatMessages = chatRepository.findMessagesByReading(readingId).map {
+            ChatMessageDto(
+                id = it.id.toString(),
+                role = it.role,
+                text = it.text,
+                createdAt = it.createdAt.toString(),
+            )
+        }
+        return reading.toDetail(chatMessages)
     }
 
     suspend fun listReadings(
@@ -106,12 +117,13 @@ class SpreadService(
         createdAt = createdAt.toString(),
     )
 
-    private fun Reading.toDetail() = ReadingDetail(
+    private fun Reading.toDetail(chatMessages: List<ChatMessageDto> = emptyList()) = ReadingDetail(
         readingId = id.toString(),
         spreadType = spreadType.value,
         question = question,
         cards = cards,
         interpretation = interpretation ?: "",
         createdAt = createdAt.toString(),
+        chatMessages = chatMessages,
     )
 }

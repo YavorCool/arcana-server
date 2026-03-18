@@ -1,6 +1,7 @@
 package com.schlepping.arcana.plugins
 
 import com.schlepping.arcana.auth.authModule
+import com.schlepping.arcana.chat.chatModule
 import com.schlepping.arcana.daily.dailyCardModule
 import com.schlepping.arcana.llm.llmModule
 import com.schlepping.arcana.spread.spreadModule
@@ -15,6 +16,7 @@ fun Application.configureDI() {
             authModule(),
             llmModule(),
             dailyCardModule(),
+            chatModule(),
             spreadModule(),
         )
     }

@@ -2,6 +2,7 @@ package com.schlepping.arcana.spread
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.schlepping.arcana.FakeChatRepository
 import com.schlepping.arcana.FakeLlmProvider
 import com.schlepping.arcana.FakeSpreadRepository
 import com.schlepping.arcana.auth.JwtClaims
@@ -81,7 +82,7 @@ class SpreadRoutesTest {
             dailyCard = "gpt-5-mini",
             firstReading = "gpt-5",
         )
-        val service = SpreadService(fakeLlm, fakeRepo, LlmRouter(routingConfig), PromptBuilder())
+        val service = SpreadService(fakeLlm, fakeRepo, LlmRouter(routingConfig), PromptBuilder(), FakeChatRepository())
         routing {
             spreadRoutes(service)
         }

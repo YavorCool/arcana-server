@@ -1,7 +1,10 @@
 package com.schlepping.arcana.llm.prompt
 
+import com.schlepping.arcana.chat.ChatMessage
+import com.schlepping.arcana.llm.ChatTurn
 import com.schlepping.arcana.llm.LlmPrompt
 import com.schlepping.arcana.spread.CardData
+import com.schlepping.arcana.spread.Reading
 import com.schlepping.arcana.spread.SpreadType
 
 enum class DailyCardFormat { BRIEF, FULL }
@@ -69,6 +72,48 @@ class PromptBuilder {
             systemMessage = SystemPrompts.READING_V2,
             userMessage = userMessage,
             modelId = "", // filled by caller via LlmRouter
+        )
+    }
+
+    fun buildChatPrompt(
+        reading: Reading,
+        chatHistory: List<ChatMessage>,
+        userMessage: String,
+        querentName: String?,
+    ): LlmPrompt {
+        val positions = resolvePositions(reading.spreadType)
+
+        val cardsSection = reading.cards.mapIndexed { index, card ->
+            val orientation = if (card.isReversed) "reversed" else "upright"
+            val position = positions.getOrNull(index)
+            if (position != null) {
+                "Position: $position — ${card.cardName} ($orientation)"
+            } else {
+                "${card.cardName} ($orientation)"
+            }
+        }.joinToString("\n")
+
+        val spreadLabel = reading.spreadType.value.replace("_", " ")
+            .replaceFirstChar { it.uppercase() }
+
+        val systemMessage = buildString {
+            append(SystemPrompts.CHAT_V2)
+            append("\n\nREADING CONTEXT:\n")
+            append("Spread type: $spreadLabel\n")
+            reading.question?.let { append("Question: $it\n") }
+            querentName?.let { append("Querent name: $it\n") }
+            append("Cards:\n")
+            append(cardsSection)
+            reading.interpretation?.let { append("\n\nOriginal interpretation:\n$it") }
+        }
+
+        val conversationHistory = chatHistory.map { ChatTurn(it.role, it.text) }
+
+        return LlmPrompt(
+            systemMessage = systemMessage,
+            userMessage = userMessage,
+            modelId = "",
+            conversationHistory = conversationHistory,
         )
     }
 

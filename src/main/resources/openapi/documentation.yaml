@@ -169,6 +169,42 @@ components:
         createdAt:
           type: string
           format: date-time
+        chatMessages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessageDto"
+          description: "Chat messages for this reading (empty if no chat yet)"
+
+    ChatMessageRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          maxLength: 1000
+          example: "What does The Fool mean in this context?"
+
+    ChatMessageResponse:
+      type: object
+      properties:
+        aiResponse:
+          type: string
+          example: "The Fool in this position speaks of new beginnings..."
+
+    ChatMessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant]
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     ReadingsListResponse:
       type: object
@@ -442,6 +478,80 @@ paths:
                   error:
                     type: string
                     example: "Token is not valid or has expired"
+        "503":
+          description: "AI service temporarily unavailable"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /api/v1/readings/{readingId}/chat:
+    post:
+      tags:
+        - "Chat"
+      summary: "Send chat message about a reading"
+      description: |
+        Send a follow-up question about a specific tarot reading and get an AI response.
+        Free tier: 1 question per reading. Premium: unlimited.
+        The AI uses the reading context (cards, question, interpretation) and chat history
+        to provide contextual responses.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: readingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Reading UUID to chat about"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageRequest"
+      responses:
+        "201":
+          description: "Chat message sent, AI response returned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessageResponse"
+        "400":
+          description: "Invalid request (empty message, message too long, invalid UUID)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Missing or invalid JWT token"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Token is not valid or has expired"
+        "404":
+          description: "Reading not found or belongs to another device"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                error: "Reading not found"
+                code: "READING_NOT_FOUND"
+        "429":
+          description: "Chat limit reached (Free tier: 1 question per reading)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                error: "Free tier allows 1 question per reading"
+                code: "CHAT_LIMIT_REACHED"
         "503":
           description: "AI service temporarily unavailable"
           content:

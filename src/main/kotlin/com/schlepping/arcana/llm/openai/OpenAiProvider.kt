@@ -20,12 +20,14 @@ class OpenAiProvider(
     private val log = LoggerFactory.getLogger(OpenAiProvider::class.java)
 
     override suspend fun generate(prompt: LlmPrompt): LlmResponse {
+        val historyMessages = prompt.conversationHistory.map {
+            OpenAiMessage(role = it.role.apiValue, content = it.content)
+        }
         val request = OpenAiRequest(
             model = prompt.modelId,
-            messages = listOf(
-                OpenAiMessage(role = "system", content = prompt.systemMessage),
-                OpenAiMessage(role = "user", content = prompt.userMessage),
-            ),
+            messages = listOf(OpenAiMessage(role = "system", content = prompt.systemMessage)) +
+                historyMessages +
+                listOf(OpenAiMessage(role = "user", content = prompt.userMessage)),
         )
 
         val failureMessage = "OpenAI request failed after ${config.maxRetries + 1} attempts"
