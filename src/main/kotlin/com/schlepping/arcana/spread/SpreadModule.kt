@@ -4,5 +4,5 @@ import org.koin.dsl.module
 
 fun spreadModule() = module {
     single<SpreadRepository> { SpreadRepositoryImpl() }
-    single { SpreadService(get(), get(), get(), get()) }
+    single { SpreadService(get(), get(), get(), get(), get()) }
 }

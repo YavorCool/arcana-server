@@ -1,5 +1,6 @@
 package com.schlepping.arcana.spread
 
+import com.schlepping.arcana.FakeChatRepository
 import com.schlepping.arcana.FakeLlmProvider
 import com.schlepping.arcana.FakeSpreadRepository
 import com.schlepping.arcana.llm.LlmException
@@ -20,6 +21,7 @@ class SpreadServiceTest {
 
     private val fakeLlm = FakeLlmProvider()
     private val fakeRepo = FakeSpreadRepository()
+    private val fakeChatRepo = FakeChatRepository()
     private val routingConfig = LlmRoutingConfig(
         premiumReading = "gpt-5",
         freeReading = "gpt-5-mini",
@@ -30,7 +32,7 @@ class SpreadServiceTest {
     )
     private val router = LlmRouter(routingConfig)
     private val promptBuilder = PromptBuilder()
-    private val service = SpreadService(fakeLlm, fakeRepo, router, promptBuilder)
+    private val service = SpreadService(fakeLlm, fakeRepo, router, promptBuilder, fakeChatRepo)
     private val deviceId = UUID.randomUUID()
 
     private fun yesNoRequest(cardName: String = "The Fool", question: String? = null) =
@@ -144,7 +146,7 @@ class SpreadServiceTest {
                 throw LlmException("Service unavailable")
             }
         }
-        val failService = SpreadService(failingLlm, fakeRepo, router, promptBuilder)
+        val failService = SpreadService(failingLlm, fakeRepo, router, promptBuilder, fakeChatRepo)
 
         assertFailsWith<LlmException> {
             failService.createReading(deviceId, yesNoRequest(), UserTier.FREE)
@@ -253,6 +255,51 @@ class SpreadServiceTest {
 
         assertEquals(0, list.readings.size)
         assertEquals(false, list.hasMore)
+    }
+
+    // Chat messages in reading detail
+
+    @Test
+    fun `getReading returns chat messages in detail`() = runTest {
+        val result = service.createReading(deviceId, yesNoRequest(), UserTier.FREE)
+        val readingId = java.util.UUID.fromString(result.readingId)
+
+        // Save a chat message pair
+        val now = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC)
+        fakeChatRepo.saveMessages(
+            listOf(
+                com.schlepping.arcana.chat.ChatMessage(
+                    id = java.util.UUID.randomUUID(),
+                    readingId = readingId,
+                    role = com.schlepping.arcana.llm.ChatRole.USER,
+                    text = "What does this mean?",
+                    createdAt = now,
+                ),
+                com.schlepping.arcana.chat.ChatMessage(
+                    id = java.util.UUID.randomUUID(),
+                    readingId = readingId,
+                    role = com.schlepping.arcana.llm.ChatRole.ASSISTANT,
+                    text = "The cards suggest...",
+                    createdAt = now,
+                ),
+            ),
+        )
+
+        val detail = service.getReading(deviceId, readingId)
+
+        assertEquals(2, detail.chatMessages.size)
+        assertEquals(com.schlepping.arcana.llm.ChatRole.USER, detail.chatMessages[0].role)
+        assertEquals(com.schlepping.arcana.llm.ChatRole.ASSISTANT, detail.chatMessages[1].role)
+    }
+
+    @Test
+    fun `getReading with no chat returns empty chatMessages list`() = runTest {
+        val result = service.createReading(deviceId, yesNoRequest(), UserTier.FREE)
+        val readingId = java.util.UUID.fromString(result.readingId)
+
+        val detail = service.getReading(deviceId, readingId)
+
+        assertEquals(0, detail.chatMessages.size)
     }
 
     private fun runTest(block: suspend kotlinx.coroutines.CoroutineScope.() -> Unit) =

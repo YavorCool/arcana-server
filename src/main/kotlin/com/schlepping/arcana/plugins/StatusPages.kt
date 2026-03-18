@@ -1,6 +1,7 @@
 package com.schlepping.arcana.plugins
 
 import com.schlepping.arcana.auth.AuthException
+import com.schlepping.arcana.chat.ChatException
 import com.schlepping.arcana.llm.LlmException
 import com.schlepping.arcana.spread.SpreadException
 import io.ktor.http.*
@@ -21,6 +22,20 @@ fun Application.configureStatusPages() {
             call.respond(
                 HttpStatusCode.TooManyRequests,
                 ApiError(error = cause.message ?: "Daily limit reached", code = "DAILY_LIMIT_REACHED"),
+            )
+        }
+
+        exception<ChatException.ChatLimitReached> { call, cause ->
+            call.respond(
+                HttpStatusCode.TooManyRequests,
+                ApiError(error = cause.message ?: "Chat limit reached", code = "CHAT_LIMIT_REACHED"),
+            )
+        }
+
+        exception<ChatException.ReadingNotFound> { call, cause ->
+            call.respond(
+                HttpStatusCode.NotFound,
+                ApiError(error = cause.message ?: "Reading not found", code = "READING_NOT_FOUND"),
             )
         }
 

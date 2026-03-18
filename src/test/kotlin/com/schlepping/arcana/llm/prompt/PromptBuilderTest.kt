@@ -1,10 +1,17 @@
 package com.schlepping.arcana.llm.prompt
 
+import com.schlepping.arcana.chat.ChatMessage
+import com.schlepping.arcana.llm.ChatRole
 import com.schlepping.arcana.spread.CardData
+import com.schlepping.arcana.spread.Reading
 import com.schlepping.arcana.spread.SpreadType
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 
 class PromptBuilderTest {
 
@@ -222,5 +229,101 @@ class PromptBuilderTest {
         )
 
         assertTrue(prompt.userMessage.contains("Past present future"))
+    }
+
+    // Chat prompt tests
+
+    private fun testReading(
+        spreadType: SpreadType = SpreadType.PAST_PRESENT_FUTURE,
+        question: String? = "Will I find love?",
+        cards: List<CardData> = listOf(
+            CardData("The Fool", false),
+            CardData("The Magician", true),
+            CardData("The High Priestess", false),
+        ),
+    ) = Reading(
+        id = UUID.randomUUID(),
+        deviceId = UUID.randomUUID(),
+        spreadType = spreadType,
+        question = question,
+        cards = cards,
+        interpretation = "The Fool speaks of new beginnings...",
+        createdAt = LocalDateTime.now(ZoneOffset.UTC),
+    )
+
+    @Test
+    fun `buildChatPrompt uses CHAT_V2 system prompt`() {
+        val prompt = builder.buildChatPrompt(
+            reading = testReading(),
+            chatHistory = emptyList(),
+            userMessage = "What does this mean?",
+            querentName = null,
+        )
+
+        assertTrue(prompt.systemMessage.contains("continuing a conversation about a tarot reading"))
+    }
+
+    @Test
+    fun `buildChatPrompt includes reading context in system message`() {
+        val prompt = builder.buildChatPrompt(
+            reading = testReading(),
+            chatHistory = emptyList(),
+            userMessage = "Tell me more",
+            querentName = null,
+        )
+
+        assertTrue(prompt.systemMessage.contains("READING CONTEXT:"))
+        assertTrue(prompt.systemMessage.contains("Will I find love?"))
+        assertTrue(prompt.systemMessage.contains("The Fool speaks of new beginnings..."))
+    }
+
+    @Test
+    fun `buildChatPrompt includes card positions`() {
+        val prompt = builder.buildChatPrompt(
+            reading = testReading(),
+            chatHistory = emptyList(),
+            userMessage = "Tell me about the cards",
+            querentName = null,
+        )
+
+        assertTrue(prompt.systemMessage.contains("Past"))
+        assertTrue(prompt.systemMessage.contains("Present"))
+        assertTrue(prompt.systemMessage.contains("Future"))
+        assertTrue(prompt.systemMessage.contains("The Fool (upright)"))
+        assertTrue(prompt.systemMessage.contains("The Magician (reversed)"))
+    }
+
+    @Test
+    fun `buildChatPrompt maps chat history to conversation turns`() {
+        val now = LocalDateTime.now(ZoneOffset.UTC)
+        val history = listOf(
+            ChatMessage(UUID.randomUUID(), UUID.randomUUID(), ChatRole.USER, "First question", now),
+            ChatMessage(UUID.randomUUID(), UUID.randomUUID(), ChatRole.ASSISTANT, "First answer", now),
+        )
+
+        val prompt = builder.buildChatPrompt(
+            reading = testReading(),
+            chatHistory = history,
+            userMessage = "Follow up",
+            querentName = null,
+        )
+
+        assertEquals(2, prompt.conversationHistory.size)
+        assertEquals(ChatRole.USER, prompt.conversationHistory[0].role)
+        assertEquals("First question", prompt.conversationHistory[0].content)
+        assertEquals(ChatRole.ASSISTANT, prompt.conversationHistory[1].role)
+        assertEquals("First answer", prompt.conversationHistory[1].content)
+    }
+
+    @Test
+    fun `buildChatPrompt sets user message correctly`() {
+        val prompt = builder.buildChatPrompt(
+            reading = testReading(),
+            chatHistory = emptyList(),
+            userMessage = "What about the reversed Magician?",
+            querentName = null,
+        )
+
+        assertEquals("What about the reversed Magician?", prompt.userMessage)
     }
 }
